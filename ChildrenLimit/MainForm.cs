@@ -41,7 +41,9 @@ namespace ChildrenLimit
         //[DllImport("Kernel32.dll", SetLastError = true)]
         //static extern WTSGetActiveConsoleSessionId();
 
+        // ReSharper disable once InconsistentNaming
         const int WTS_CURRENT_SESSION = -1;
+        // ReSharper disable once InconsistentNaming
         static readonly IntPtr WTS_CURRENT_SERVER_HANDLE = IntPtr.Zero;
 
         public static bool WindowsLogOff()
@@ -81,6 +83,11 @@ namespace ChildrenLimit
                         }
                     }
 
+                    if (activeTime == TimeSpan.FromMinutes(time))
+                    {
+                        session.SaveStartSession();
+                    }
+
                     lblTimer.Text = $"{(int)activeTime.TotalMinutes}:{activeTime.Seconds:00}";
                     timer.Enabled = true;
                     Show();
@@ -96,6 +103,15 @@ namespace ChildrenLimit
                 menuItem = new MenuItem($"Wait: {time} minutes");
                 activeTime = TimeSpan.FromMinutes(time);
 
+                var start = session.LoadStartSessions().FirstOrDefault();
+                if (!start.Equals(default(DateTime)))
+                {
+                    if (DateTime.Now - start < TimeSpan.FromMinutes(20))
+                    {
+                        activeTime = DateTime.Now - start;
+                    }
+                }
+
                 var sessionItem1 = session.LoadSessions().FirstOrDefault();
                 if (!sessionItem1.Equals(default(DateTime)))
                 {
@@ -109,6 +125,11 @@ namespace ChildrenLimit
                         lblNext.Text = $"{nextTime.Hour:00}:{nextTime.Minute:00}";
                         lblNext.Visible = true;
                     }
+                }
+
+                if (activeTime == TimeSpan.FromMinutes(time))
+                {
+                    session.SaveStartSession();
                 }
 
                 lblTimer.Text = $"{(int)activeTime.TotalMinutes}:{activeTime.Seconds:00}";

@@ -8,6 +8,7 @@ namespace ChildrenLimit
     public class Session
     {
         private readonly string sessionPath;
+        private readonly string startSessionPath;
 
         public string AppDataPath { get; set; }
 
@@ -15,6 +16,7 @@ namespace ChildrenLimit
         {
             AppDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data");
             sessionPath = Path.Combine(AppDataPath, "sessions.dat");
+            startSessionPath = Path.Combine(AppDataPath, "startSessions.dat");
 
             if (!Directory.Exists(AppDataPath))
             {
@@ -25,6 +27,19 @@ namespace ChildrenLimit
             {
                 using (File.Create(sessionPath)) { }
             }
+
+            if (!File.Exists(startSessionPath))
+            {
+                using (File.Create(startSessionPath)) { }
+            }
+        }
+
+        public void SaveStartSession()
+        {
+            using (TextWriter writer = new StreamWriter(startSessionPath, false, Encoding.UTF8))
+            {
+                writer.WriteLine(((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds());
+            }
         }
 
         public void SaveSession()
@@ -33,6 +48,22 @@ namespace ChildrenLimit
             {
                 writer.WriteLine(((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds());
             }
+        }
+
+        public IEnumerable<DateTime> LoadStartSessions()
+        {
+            using (TextReader reader = new StreamReader(startSessionPath, Encoding.UTF8))
+            {
+                string buf;
+                while ((buf = reader.ReadLine()) != null)
+                {
+                    if (long.TryParse(buf, out long data))
+                    {
+                        yield return UnixTimeStampToDateTime(data);
+                    }
+                }
+            }
+
         }
 
         public IEnumerable<DateTime> LoadSessions()
