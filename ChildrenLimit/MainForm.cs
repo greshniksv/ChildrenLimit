@@ -108,7 +108,7 @@ namespace ChildrenLimit
                 {
                     if (DateTime.Now - start < TimeSpan.FromMinutes(20))
                     {
-                        activeTime = DateTime.Now - start;
+                        activeTime = TimeSpan.FromMinutes(20) - (DateTime.Now - start);
                     }
                 }
 
